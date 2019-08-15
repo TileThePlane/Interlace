@@ -5,7 +5,7 @@ import os.path
 from os import access, W_OK
 import sys
 from re import compile
-from random import sample
+from random import sample, choice
 from math import ceil
 
 
@@ -16,6 +16,12 @@ class InputHelper(object):
             parser.error("The file %s does not exist!" % arg)
         else:
             return open(arg, 'r')  # return an open file handle
+
+    @staticmethod
+    def get_dir_list(parser, arg):
+        if not os.path.exists(arg):
+            parser.error("The folder %s does not exist!" % arg)
+        return [os.path.join(arg, file) for file in os.listdir(arg)]
 
     @staticmethod
     def check_positive(parser, arg):
@@ -91,7 +97,6 @@ class InputHelper(object):
         tmp_commands.update(test)
         return tmp_commands
 
-
     @staticmethod
     def process_commands(arguments):
         commands = set()
@@ -128,7 +133,6 @@ class InputHelper(object):
                 real_ports = list(range(int(tmp_ports[0]), int(tmp_ports[1]) + 1))
             else:
                 real_ports = [arguments.realport]
-
 
         # process targets first
         if arguments.target:
@@ -235,6 +239,16 @@ class InputHelper(object):
 
             final_commands = InputHelper._replace_variable_array(final_commands, "_proxy_", proxy_list)
 
+        # if arguments.random:
+        #     ranges.add(arguments.target)
+        # else:
+        #     targetFile = arguments.target_list
+        #     if not sys.stdin.isatty():
+        #         targetFile = sys.stdin
+        #     for target in targetFile:
+        #         if target.strip():
+        #             ranges.add(target.strip())
+
         return final_commands
 
 
@@ -304,6 +318,13 @@ class InputParser(object):
             help='Specify a list of proxies.',
             metavar="FILE",
             type=lambda x: InputHelper.readable_file(parser, x)
+        )
+
+        parser.add_argument(
+            '--random', dest='random', default=False,
+            metavar="FILE",
+            type=lambda x: InputHelper.readable_folder(parser, x),
+            help='Randomly uses a key file from the specified folder as in _random_ in commands.'
         )
 
         commands = parser.add_mutually_exclusive_group(required=True)
